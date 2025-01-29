@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Path Creation Steps Quiz</title>
+    <style>
+        body {
+            font-family: "Courier New", monospace;
+            background-color: #f0f0f0;
+            background-image: 
+                linear-gradient(rgba(173, 216, 230, 0.5) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(173, 216, 230, 0.5) 1px, transparent 1px);
+            background-size: 20px 20px;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .quiz-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        h1, h2 {
+            color: #4a4a4a;
+            text-align: center;
+        }
+
+        .progress {
+            text-align: center;
+            color: #FF69B4;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        .question {
+            text-align: center;
+            color: #FF69B4;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .step {
+            background-color: rgba(255, 255, 255, 0.9);
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid #add8e6;
+            text-align: center;
+        }
+
+        .step:hover {
+            background-color: #e8f4f8;
+        }
+
+        .step.selected {
+            background-color: #add8e6;
+            color: #4a4a4a;
+        }
+
+        .step.correct {
+            background-color: #98FB98;
+            border-color: #90EE90;
+        }
+
+        .step.incorrect {
+            background-color: #FFB6C1;
+            border-color: #FF69B4;
+        }
+
+        button {
+            background-color: #4a4a4a;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: inline-block;
+            margin: 10px 5px;
+        }
+
+        button:hover {
+            background-color: #333;
+        }
+
+        .buttons-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        #score {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 20px;
+            color: #4a4a4a;
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <h1>Text Path Creation Quiz</h1>
+        <div class="progress" id="progress">Question 1/4</div>
+        <div class="question" id="question"></div>
+        <div id="options"></div>
+        <div class="buttons-container">
+            <button onclick="checkAnswer()">Submit Answer</button>
+            <button onclick="resetQuiz()">Start Over</button>
+        </div>
+        <div id="score"></div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "What's the first step in creating a work path?",
+                options: [
+                    "Select the Type Tool",
+                    "Go to Select > Load Selection (make sure white areas are deleted first)",
+                    "Begin typing",
+                    "Open the Paths panel"
+                ],
+                correct: 1
+            },
+            {
+                question: "After loading the selection, what's the next step?",
+                options: [
+                    "Begin typing",
+                    "Select the Type Tool",
+                    "Open the Paths panel and click Make Work Path",
+                    "Hover over the path"
+                ],
+                correct: 2
+            },
+            {
+                question: "What tool do you need to add text to the path?",
+                options: [
+                    "Horizontal Type Tool (T)",
+                    "Path Selection Tool",
+                    "Direct Selection Tool",
+                    "Pen Tool"
+                ],
+                correct: 0
+            },
+            {
+                question: "How do you add text to the path?",
+                options: [
+                    "Just start typing anywhere",
+                    "Double click the path",
+                    "Hover cursor over path until it changes to curved line, click, then type",
+                    "Right-click the path"
+                ],
+                correct: 2
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let selectedOption = null;
+
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(isCorrect) {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(isCorrect ? 800 : 400, audioContext.currentTime);
+            
+            gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.5);
+        }
+
+        function displayQuestion() {
+            const questionEl = document.getElementById('question');
+            const optionsEl = document.getElementById('options');
+            const progressEl = document.getElementById('progress');
+            
+            questionEl.textContent = questions[currentQuestion].question;
+            progressEl.textContent = `Question ${currentQuestion + 1}/4`;
+            optionsEl.innerHTML = '';
+            
+            questions[currentQuestion].options.forEach((option, index) => {
+                const div = document.createElement('div');
+                div.className = 'step';
+                div.textContent = option;
+                div.onclick = () => selectOption(index, div);
+                optionsEl.appendChild(div);
+            });
+        }
+
+        function selectOption(index, element) {
+            const options = document.getElementsByClassName('step');
+            for (let option of options) {
+                option.classList.remove('selected');
+            }
+            element.classList.add('selected');
+            selectedOption = index;
+        }
+
+        function checkAnswer() {
+            if (selectedOption === null) {
+                alert('Please select an answer!');
+                return;
+            }
+
+            const options = document.getElementsByClassName('step');
+            const correct = questions[currentQuestion].correct;
+
+            options[selectedOption].classList.remove('selected');
+            if (selectedOption === correct) {
+                options[selectedOption].classList.add('correct');
+                score++;
+                playSound(true);
+            } else {
+                options[selectedOption].classList.add('incorrect');
+                options[correct].classList.add('correct');
+                playSound(false);
+            }
+
+            setTimeout(() => {
+                selectedOption = null;
+                currentQuestion++;
+                
+                if (currentQuestion < questions.length) {
+                    displayQuestion();
+                } else {
+                    showResults();
+                }
+            }, 1500);
+        }
+
+        function showResults() {
+            const container = document.getElementById('options');
+            const questionEl = document.getElementById('question');
+            const progressEl = document.getElementById('progress');
+            
+            questionEl.textContent = `Quiz Complete!`;
+            progressEl.textContent = `Final Score: ${score}/4`;
+            container.innerHTML = `
+                <div class="step" style="text-align: center;">
+                    You got ${score} out of 4 questions correct!
+                    ${score === 4 ? '🎉 Perfect Score!' : 'Keep practicing!'}
+                </div>
+            `;
+        }
+
+        function resetQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            selectedOption = null;
+            displayQuestion();
+        }
+
+        // Start the quiz
+        displayQuestion();
+    </script>
+</body>
+</html>
